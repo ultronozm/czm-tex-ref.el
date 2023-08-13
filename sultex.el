@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.1
 ;; URL: https://github.com/ultronozm/sultex.el
-;; Package-Requires: ((emacs "29.1"))
+;; Package-Requires: ((emacs "29.1") (consult "0.35"))
 ;; Keywords: tex
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -61,6 +61,27 @@
 ;; configured to always search a "master" .bib file (e.g., the one
 ;; that contains all your references); see the documentation for
 ;; `sultex-cite-bibliography-file'.
+;;
+;; Here's my use-package declaration:
+;;
+;; (use-package sultex
+;;   :ensure
+;;   :vc (:url "https://github.com/ultronozm/sultex.el.git"
+;;             :rev :newest)
+;;   :custom
+;;   (sultex-master-bib-file "~/doit/refs.bib")
+;;   (sultex-rearrange-bib-entries t)
+;;   :bind
+;;   (:map LaTeX-mode-map
+;; 	("C-c 9" . sultex-label)
+;; 	("C-c 0" . sultex-bib)))
+;;
+;; Replace "~/doit/refs.bib" with the path to your master .bib file,
+;; or delete that line altogether if you don't want to use a master
+;; .bib file.  Delete the line containing
+;; `sultex-rearrange-bib-entries' if you don't want `sultex' to
+;; rearrange your .bib file by moving selected entries to the top.
+
 
 ;;; Code:
 
@@ -77,7 +98,7 @@
   :group 'tex
   :prefix "sultex-")
 
-(defcustom sultex--labelable-environments
+(defcustom sultex-labelable-environments
   '("align" "gather" "flalign" "multline" "lemma" "exercise" "example" "proposition" "corollary" "remark" "definition" "theorem" "eqnarray" "equation" "conjecture" "question" "figure" "table")
   "List of environments that can be labeled."
   :type '(repeat string)
@@ -165,7 +186,7 @@ CURR-LINE is the current line number."
   (let* ((buffer (current-buffer))
 	 (line (line-number-at-pos (point-min) consult-line-numbers-widen))
 	 (valid-environments
-	  sultex--labelable-environments)
+	  sultex-labelable-environments)
 	 default-cand candidates)
     (consult--each-line beg end
       (when
@@ -291,6 +312,16 @@ If non-nil, this file is used to generate the list of BibTeX
 entries.  Otherwise, the list is generated from the BibTeX files
 referenced by the current buffer."
   :type 'file
+  :group 'sultex)
+
+(defcustom sultex-rearrange-bib-entries
+  nil
+  "Should BibTeX entries be rearranged after selection?
+If non-nil, then `sultex-bib' the selected BibTeX entry to the
+top of the .bib file.  This is useful if you often cite the same
+entry repeatedly, because popular ones will congregate near the
+top."
+  :type 'boolean
   :group 'sultex)
 
 (defun sultex--get-bib-files ()
@@ -461,13 +492,14 @@ The resulting \\cite{...} command is copied to the kill ring."
 			(bibtex-end-of-entry)
 			(point)))
 		 (contents (buffer-substring-no-properties beg end)))
-	    (delete-region beg end)
-	    (goto-char (point-min))
-	    (insert contents "\n")))
+            (when sultex-rearrange-bib-entries
+	      (delete-region beg end)
+	      (goto-char (point-min))
+	      (insert contents "\n"))))
         (bury-buffer)))
     (insert "\\cite")
     (save-excursion
-      (insert (format "{%s}<++>" key)))
+      (insert (format "{%s}" key)))
     (kill-new  (format "\\cite{%s}" key))))
 
 
