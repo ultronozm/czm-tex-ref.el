@@ -324,71 +324,13 @@ top."
   :type 'boolean
   :group 'sultex)
 
-(defun sultex--remove-braces-accents (input)
-  "Remove braces and accepts from string INPUT.
-This makes it easier to search for author names with accents."
-  (with-temp-buffer
-    (insert input)
-    (goto-char (point-min))
-    (while (re-search-forward
-	    (regexp-opt
-	     (list
-	      "\\{"
-	      "{"
-	      "}"
-	      "\\'"
-	      "\\`"
-	      "\\^"
-	      "\\\""
-	      "\\~"))
-	    nil t)
-      (unless (save-match-data (texmathp))
-	(replace-match "" t t)))
-    (goto-char (point-min))
-    (while (re-search-forward
-	    (regexp-opt
-	     (list
-	      "\\l "
-	      "\\l"))
-	    nil t)
-      (unless (texmathp)
-	(replace-match "l")))
-    (while (re-search-forward
-	    (regexp-opt
-	     (list
-	      "\\cprime "
-	      "\\cprime"))
-	    nil t)
-      (unless (texmathp)
-	(replace-match "")))
-    (while (re-search-forward
-	    (regexp-opt
-	     (list
-	      "\\oe "
-	      "\\oe"))
-	    nil t)
-      (unless (texmathp)
-	(replace-match "oe")))
-    (goto-char (point-min))
-    (while (re-search-forward
-	    "\\\\\\([a-zA-Z]\\)"
-	    nil t)
-      (unless (texmathp)
-	(replace-match "l")))
-    (while (re-search-forward
-	    "ḡ"
-	    nil t)
-      (unless (texmathp)
-	(replace-match "g")))
-    (buffer-substring-no-properties (point-min) (point-max))))
-
 (defun sultex--bib-display-string ()
   "Return display string for current BibTeX entry."
   (let* ((entry (bibtex-parse-entry))
 	 (year (bibtex-text-in-field "year" entry))
 	 (author (bibtex-text-in-field "author" entry))
 	 (title (bibtex-text-in-field "title" entry)))
-    (sultex--remove-braces-accents
+    (czm-tex-util-remove-braces-accents
      (format "%s, %s - %s" year author title))))
 
 
@@ -421,7 +363,7 @@ This makes it easier to search for author names with accents."
 			    ((author (bibtex-text-in-field "author" entry))
 			     (title (bibtex-text-in-field "title" entry))
 			     (display-string
-			      (sultex--remove-braces-accents (format "%s - %s" author title))))
+			      (czm-tex-util-remove-braces-accents (format "%s - %s" author title))))
 			  (bibtex-make-field `("display-string" "for bibtex entry selection" ,display-string)
 					     t)
 			  display-string))))
