@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.1
 ;; URL: https://github.com/ultronozm/sultex.el
-;; Package-Requires: ((emacs "29.1") (consult "0.35"))
+;; Package-Requires: ((emacs "29.1") (consult "0.35") (czm-tex-util "0.1"))
 ;; Keywords: tex
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -324,29 +324,6 @@ top."
   :type 'boolean
   :group 'sultex)
 
-(defun sultex--get-bib-files ()
-  "Get bib files for current buffer.
-If the current buffer contains a \\bibliography command, return
-a list containing the files referenced by that command.  Otherwise, return nil."
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (when (re-search-forward "\\\\bibliography{\\([^}]+\\)}" nil t)
-        (let ((contents (match-string 1)))
-          ;; contents is a comma-delimited list of files, which may
-          ;; contain extra spaces.  Each file is either a relative or
-          ;; absolute path to a .bib file.  The .bib extension is
-          ;; optional.
-          (mapcar
-           (lambda (x)
-             (let ((file (expand-file-name
-                          (concat (file-name-sans-extension x) ".bib"))))
-               (if (file-exists-p file)
-                   file
-                 (user-error "BibTeX file %s does not exist" file))))
-           (split-string contents "[, ]+" t)))))))
-
 (defun sultex--remove-braces-accents (input)
   "Remove braces and accepts from string INPUT.
 This makes it easier to search for author names with accents."
@@ -422,7 +399,7 @@ This makes it easier to search for author names with accents."
     (let* ((bibfile
             (or
              sultex-master-bib-file
-             (car (sultex--get-bib-files)) ; just look at the first
+             (car (czm-tex-util-get-bib-files)) ; just look at the first
                                            ; bib file
              (user-error "No BibTeX files found")))
            (buffer
