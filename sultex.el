@@ -85,10 +85,10 @@
 
 ;;; Code:
 
-(require 'latex)
 (require 'reftex)
 (require 'bibtex)
 (require 'consult)
+(require 'czm-tex-util)
 
 ;; The following customizable variable specifies which function to be
 ;; used for inserting labels.  The default is to use reftex.
