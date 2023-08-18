@@ -3,9 +3,9 @@
 ;; Copyright (C) 2023  Paul D. Nelson
 
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
-;; Version: 0.1
+;; Version: 0.0
 ;; URL: https://github.com/ultronozm/sultex.el
-;; Package-Requires: ((emacs "29.1") (consult "0.35") (czm-tex-util "0.1"))
+;; Package-Requires: ((emacs "29.1") (consult "0.35") (czm-tex-util "0.0"))
 ;; Keywords: tex
 
 ;; This program is free software; you can redistribute it and/or modify
