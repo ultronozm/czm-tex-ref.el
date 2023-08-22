@@ -1,10 +1,10 @@
-;;; sultex.el --- Interface for LaTeX labels/citations  -*- lexical-binding: t; -*-
+;;; czm-tex-ref.el --- Interface for LaTeX labels/citations  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023  Paul D. Nelson
 
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
-;; URL: https://github.com/ultronozm/sultex.el
+;; URL: https://github.com/ultronozm/czm-tex-ref.el
 ;; Package-Requires: ((emacs "29.1") (consult "0.35") (czm-tex-util "0.0"))
 ;; Keywords: tex
 
@@ -44,42 +44,42 @@
 ;; `reftex-label' to insert labels, and `reftex-reference' to insert
 ;; references to labels.
 ;;
-;; In `sultex', the label and reference features are combined into a
-;; single function, `sultex-label'.  This uses `consult' to select a
+;; In `czm-tex-ref', the label and reference features are combined into a
+;; single function, `czm-tex-ref-label'.  This uses `consult' to select a
 ;; line in the current buffer that either contains a label, or where
 ;; it makes sense to insert one.  In the latter case, a new label is
 ;; inserted at the appropriate position.  In either case, a reference
 ;; to the label is copied to the kill ring.
 ;;
-;; `sultex-cite' is similar to `reftex-cite', but using `consult'.
+;; `czm-tex-ref-cite' is similar to `reftex-cite', but using `consult'.
 ;; Because this function has been designed to work also in non-file
 ;; buffers, it is a bit less featureful than `reftex-cite'; for
 ;; instance, it doesn't work with \\bibitem entries, and by default,
 ;; it looks for a \bibliography{...}  command in the current buffer
 ;; and searches the first listed .bib file for matching entries.
-;; Alternatively (and this is how I use it), `sultex' can be
+;; Alternatively (and this is how I use it), `czm-tex-ref' can be
 ;; configured to always search a "master" .bib file (e.g., the one
 ;; that contains all your references); see the documentation for
-;; `sultex-cite-bibliography-file'.
+;; `czm-tex-ref-cite-bibliography-file'.
 ;;
 ;; Here's my use-package declaration:
 ;;
-;; (use-package sultex
+;; (use-package czm-tex-ref
 ;;   :ensure
-;;   :vc (:url "https://github.com/ultronozm/sultex.el.git"
+;;   :vc (:url "https://github.com/ultronozm/czm-tex-ref.el.git"
 ;;             :rev :newest)
 ;;   :custom
-;;   (sultex-master-bib-file "~/doit/refs.bib")
-;;   (sultex-rearrange-bib-entries t)
+;;   (czm-tex-ref-master-bib-file "~/doit/refs.bib")
+;;   (czm-tex-ref-rearrange-bib-entries t)
 ;;   :bind
 ;;   (:map LaTeX-mode-map
-;; 	("C-c 9" . sultex-label)
-;; 	("C-c 0" . sultex-bib)))
+;; 	("C-c 9" . czm-tex-ref-label)
+;; 	("C-c 0" . czm-tex-ref-bib)))
 ;;
 ;; Replace "~/doit/refs.bib" with the path to your master .bib file,
 ;; or delete that line altogether if you don't want to use a master
 ;; .bib file.  Delete the line containing
-;; `sultex-rearrange-bib-entries' if you don't want `sultex' to
+;; `czm-tex-ref-rearrange-bib-entries' if you don't want `czm-tex-ref' to
 ;; rearrange your .bib file by moving selected entries to the top.
 
 
@@ -93,42 +93,42 @@
 ;; The following customizable variable specifies which function to be
 ;; used for inserting labels.  The default is to use reftex.
 
-(defgroup sultex nil
+(defgroup czm-tex-ref nil
   "Use consult to help with LaTeX references."
   :group 'tex
-  :prefix "sultex-")
+  :prefix "czm-tex-ref-")
 
-(defcustom sultex-labelable-environments
+(defcustom czm-tex-ref-labelable-environments
   '("align" "gather" "flalign" "multline" "lemma" "exercise" "example" "proposition" "corollary" "remark" "definition" "theorem" "eqnarray" "equation" "conjecture" "question" "figure" "table")
   "List of environments that can be labeled."
   :type '(repeat string)
-  :group 'sultex)
+  :group 'czm-tex-ref)
 
-(defcustom sultex-insert-label-function
-  #'sultex-insert-label
+(defcustom czm-tex-ref-insert-label-function
+  #'czm-tex-ref-insert-label
   "Function to be used for inserting labels.
 The default setting generates a unique label reflecting the
 current date and time.  If you prefer to use the built-in
 functionality of `reftex', then set this variable to
 \\='reftex-label."
   :type 'function
-  :group 'sultex)
+  :group 'czm-tex-ref)
 
-(defun sultex-insert-label ()
+(defun czm-tex-ref-insert-label ()
   "Insert a unique label for the current LaTeX environment."
   (let*
       ((default-description
 	(or
-	 (sultex--encode-number
+	 (czm-tex-ref--encode-number
 	  (string-to-number (format-time-string "%y%m%d%H%M%S%3N")))
 	 (funcall reftex-string-to-label-function (reftex-no-props (nth 2 (reftex-label-info " " nil nil t))))))
        (description (read-from-minibuffer "Description:" default-description))
-       (prefix (sultex--label-prefix-from-env (LaTeX-current-environment)))
+       (prefix (czm-tex-ref--label-prefix-from-env (LaTeX-current-environment)))
        (new-label (concat prefix description)))
     (insert (format "\\label{%s}" new-label))
     new-label))
 
-(defun sultex--encode-number (number)
+(defun czm-tex-ref--encode-number (number)
   "Encode NUMBER in base 36."
   (let* ((charset "abcdefghijklmnopqrstuvwxyz0123456789")
          (base (length charset))
@@ -142,7 +142,7 @@ functionality of `reftex', then set this variable to
       (setq number (/ number base)))
     result))
 
-(defun sultex--label-prefix-from-env (env)
+(defun czm-tex-ref--label-prefix-from-env (env)
   "Generate label prefix for environment ENV.
 If ENV is \"document\", then return \"sec:\".  If ENV can be
 found in LaTeX-label-alist (which controls which environments
@@ -177,7 +177,7 @@ prefix."
 ;;               (seq-filter (lambda (x) (eq (cadr x) 'LaTeX-env-label))
 ;;                           filtered-environment-list)))))
 
-(defun sultex--label-candidates (curr-line)
+(defun czm-tex-ref--label-candidates (curr-line)
   "Return list of line candidates.
 Start from top if TOP non-nil.
 CURR-LINE is the current line number."
@@ -186,7 +186,7 @@ CURR-LINE is the current line number."
   (let* ((buffer (current-buffer))
 	 (line (line-number-at-pos (point-min) consult-line-numbers-widen))
 	 (valid-environments
-	  sultex-labelable-environments)
+	  czm-tex-ref-labelable-environments)
 	 default-cand candidates)
     (consult--each-line beg end
       (when
@@ -222,7 +222,7 @@ CURR-LINE is the current line number."
          (nconc before candidates))))))
 
 ;;;###autoload
-(defun sultex-label (&optional arg)
+(defun czm-tex-ref-label (&optional arg)
   "Use consult to insert and copy a LaTeX label.
 
 Use `consult' to select a line which either contains a label, or
@@ -235,7 +235,7 @@ label (either \\ref{...} or \\eqref{...}) is copied to the
 kill ring.
 
 If the selected line does not contain a label, then a label will
-be inserted using `sultex-insert-label-function', removing any
+be inserted using `czm-tex-ref-insert-label-function', removing any
 asterisks from the end of the environment name (e.g., equation*
 -> equation), and copied.
 
@@ -248,7 +248,7 @@ This function is a modification of `consult-line'."
 	    (save-restriction
 	      (when arg (widen))
 	      (consult--slow-operation "Collecting lines..."
-		(sultex--label-candidates curr-line)))))
+		(czm-tex-ref--label-candidates curr-line)))))
       (consult--read
        candidates
        :prompt "Selection:"
@@ -278,17 +278,17 @@ This function is a modification of `consult-line'."
 	      (let ((type (match-string 1)))
 		(when (and (> (length type) 1) (equal (substring type -1) "*"))
 		  (LaTeX-modify-environment (substring type 0 -1))))
-	      (funcall sultex-insert-label-function))
+	      (funcall czm-tex-ref-insert-label-function))
 	     ;; We next check for \section{...} and varia.
 	     ((re-search-forward (concat "\\\\"
 					 (regexp-opt
 					  (mapcar #'car reftex-section-levels))
 					 "{\\([^}]+\\)}")
 				 end t)
-	      (funcall sultex-insert-label-function))
+	      (funcall czm-tex-ref-insert-label-function))
 	     ;; We next check for \item's.
 	     ((re-search-forward "\\\\item" end t)
-	      (funcall sultex-insert-label-function))
+	      (funcall czm-tex-ref-insert-label-function))
 	     ;; This shouldn't happen because of the way candidates
 	     ;; are constructed.
 	     (t
@@ -305,26 +305,26 @@ This function is a modification of `consult-line'."
 ;; bibtex stuff goes below here
 
 
-(defcustom sultex-master-bib-file
+(defcustom czm-tex-ref-master-bib-file
   nil
   "Master BibTeX file.
 If non-nil, this file is used to generate the list of BibTeX
 entries.  Otherwise, the list is generated from the BibTeX files
 referenced by the current buffer."
   :type 'file
-  :group 'sultex)
+  :group 'czm-tex-ref)
 
-(defcustom sultex-rearrange-bib-entries
+(defcustom czm-tex-ref-rearrange-bib-entries
   nil
   "Should BibTeX entries be rearranged after selection?
-If non-nil, then `sultex-bib' the selected BibTeX entry to the
+If non-nil, then `czm-tex-ref-bib' the selected BibTeX entry to the
 top of the .bib file.  This is useful if you often cite the same
 entry repeatedly, because popular ones will congregate near the
 top."
   :type 'boolean
-  :group 'sultex)
+  :group 'czm-tex-ref)
 
-(defun sultex--bib-display-string ()
+(defun czm-tex-ref--bib-display-string ()
   "Return display string for current BibTeX entry."
   (let* ((entry (bibtex-parse-entry))
 	 (year (bibtex-text-in-field "year" entry))
@@ -334,13 +334,13 @@ top."
      (format "%s, %s - %s" year author title))))
 
 
-(defun sultex--bib-entry-candidates ()
+(defun czm-tex-ref--bib-entry-candidates ()
   "Return list of BibTeX entry candidates."
   (consult--forbid-minibuffer)
   (save-excursion
     (let* ((bibfile
             (or
-             sultex-master-bib-file
+             czm-tex-ref-master-bib-file
              (car (czm-tex-util-get-bib-files)) ; just look at the first
                                            ; bib file
              (user-error "No BibTeX files found")))
@@ -376,7 +376,7 @@ top."
 
 
 ;;;###autoload
-(defun sultex-bib ()
+(defun czm-tex-ref-bib ()
   "Use consult to select and copy a BibTeX entry.
 
 The resulting \\cite{...} command is copied to the kill ring."
@@ -384,7 +384,7 @@ The resulting \\cite{...} command is copied to the kill ring."
   (let (key)
     (save-mark-and-excursion
       (let* ((curr-line (line-number-at-pos (point)))
-             (candidates (save-restriction (sultex--bib-entry-candidates)))
+             (candidates (save-restriction (czm-tex-ref--bib-entry-candidates)))
              (_selected (consult--read
 			 candidates
 			 :prompt "BibTeX entry:"
@@ -411,7 +411,7 @@ The resulting \\cite{...} command is copied to the kill ring."
 			(bibtex-end-of-entry)
 			(point)))
 		 (contents (buffer-substring-no-properties beg end)))
-            (when sultex-rearrange-bib-entries
+            (when czm-tex-ref-rearrange-bib-entries
 	      (delete-region beg end)
 	      (goto-char (point-min))
 	      (insert contents "\n"))))
@@ -422,5 +422,5 @@ The resulting \\cite{...} command is copied to the kill ring."
     (kill-new  (format "\\cite{%s}" key))))
 
 
-(provide 'sultex)
-;;; sultex.el ends here
+(provide 'czm-tex-ref)
+;;; czm-tex-ref.el ends here
