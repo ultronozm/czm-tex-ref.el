@@ -1,4 +1,4 @@
-#+title: czm-tex-fold.el: Interface for LaTeX labels/citations
+#+title: czm-tex-ref.el: Interface for LaTeX labels/citations
 #+author: Paul Nelson
 
 * Overview
