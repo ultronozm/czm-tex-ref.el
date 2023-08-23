@@ -24,64 +24,8 @@
 ;;; Commentary:
 
 ;; This package provides functions for inserting
-;; labels/references/citations in a LaTeX buffer.  It differs from the
-;; standard package for doing so, `reftex', in that
-;;
-;; - label and reference features are combined into a single function,
-;;
-;; - selection is previewed using `consult', and
-;;
-;; - it works in non-file buffers, where `reftex' does not.
-;; 
-;; There is a work in progress called `consult-reftex' available at
-;; https://github.com/karthink/consult-reftex that provides a "two
-;; method" interface, closer to that of `reftex', for labels and
-;; references, also using 'consult'.
-;;
-;; In more detail:
-;; 
-;; `reftex' provides two basic functions for working with labels:
-;; `reftex-label' to insert labels, and `reftex-reference' to insert
-;; references to labels.
-;;
-;; In `czm-tex-ref', the label and reference features are combined into a
-;; single function, `czm-tex-ref-label'.  This uses `consult' to select a
-;; line in the current buffer that either contains a label, or where
-;; it makes sense to insert one.  In the latter case, a new label is
-;; inserted at the appropriate position.  In either case, a reference
-;; to the label is copied to the kill ring.
-;;
-;; `czm-tex-ref-cite' is similar to `reftex-cite', but using `consult'.
-;; Because this function has been designed to work also in non-file
-;; buffers, it is a bit less featureful than `reftex-cite'; for
-;; instance, it doesn't work with \\bibitem entries, and by default,
-;; it looks for a \bibliography{...}  command in the current buffer
-;; and searches the first listed .bib file for matching entries.
-;; Alternatively (and this is how I use it), `czm-tex-ref' can be
-;; configured to always search a "master" .bib file (e.g., the one
-;; that contains all your references); see the documentation for
-;; `czm-tex-ref-cite-bibliography-file'.
-;;
-;; Here's my use-package declaration:
-;;
-;; (use-package czm-tex-ref
-;;   :ensure
-;;   :vc (:url "https://github.com/ultronozm/czm-tex-ref.el.git"
-;;             :rev :newest)
-;;   :custom
-;;   (czm-tex-ref-master-bib-file "~/doit/refs.bib")
-;;   (czm-tex-ref-rearrange-bib-entries t)
-;;   :bind
-;;   (:map LaTeX-mode-map
-;; 	("C-c 9" . czm-tex-ref-label)
-;; 	("C-c 0" . czm-tex-ref-bib)))
-;;
-;; Replace "~/doit/refs.bib" with the path to your master .bib file,
-;; or delete that line altogether if you don't want to use a master
-;; .bib file.  Delete the line containing
-;; `czm-tex-ref-rearrange-bib-entries' if you don't want `czm-tex-ref' to
-;; rearrange your .bib file by moving selected entries to the top.
-
+;; labels/references/citations in a LaTeX buffer.  See the
+;; accompanying README.org for details.
 
 ;;; Code:
 
