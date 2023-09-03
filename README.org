@@ -2,7 +2,13 @@
 #+author: Paul Nelson
 
 * Overview
-This package provides functions for inserting labels/references/citations in a LaTeX buffer.  It differs from the standard package for doing so, [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]], in that
+This package provides functions for inserting labels/references/citations in a LaTeX buffer.  For example, here's how it looks when I decide that I want to number some equation and refer to it:
+
+#+attr_html: :width 800px
+#+attr_latex: :width 800px
+[[./img/gif.gif]]
+
+This packages differs from the standard package for doing so, [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]], in that
 
 - label and reference features are combined into a single function,
 
@@ -11,10 +17,6 @@ This package provides functions for inserting labels/references/citations in a L
 - it works in non-file buffers, where [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]] does not, and
 
 - it is less feature-complete than reftex in a couple ways.
-
-There is a work in progress called [[https://github.com/karthink/consult-reftex][consult-reftex]] that provides a "two method" interface, closer to that of [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]], for labels and references, also using [[https://github.com/minad/consult][consult]].
-
-TODO: add a quick video showing how it works.
 
 * Configuration
 This package requires [[https://www.gnu.org/software/auctex/manual/auctex/Installation.html#Installation][AUCTeX]] and [[https://github.com/ultronozm/czm-tex-util.el][czm-tex-util.el]], so install those first.
@@ -66,3 +68,6 @@ The latter workflow feels much quicker and more fluid to me.
    - It doesn't support multiple .bib files.
 
 This isn't much of a problem for me, since I keep all my references in one .bib file.
+
+* Related packages
+There is a work in progress called [[https://github.com/karthink/consult-reftex][consult-reftex]] that provides a "two method" interface, closer to that of [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]], for labels and references, also using [[https://github.com/minad/consult][consult]].
