@@ -41,7 +41,7 @@ Modify suitably:
   #+begin_src elisp
    (czm-tex-ref-insert-label-function #'reftex-label)
   #+end_src
-  Or customize this to whatever you'd ilke; the default option =czm-tex-ref-insert-label= inserts a time-stamped label in base 36, as in the GIF in [[Overview]].
+  Or customize this to whatever you'd like; the default option =czm-tex-ref-insert-label= inserts a time-stamped label in base 36, as in the GIF above.
 
 * Usage
 
