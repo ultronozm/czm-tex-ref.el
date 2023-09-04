@@ -37,7 +37,11 @@ Modify suitably:
 - Replace the key binds with whatever you prefer.
 - Replace "~/doit/refs.bib" with the path to the .bib file containing all your references.  If you don't use such a "master" .bib file, then delete that line; =czm-tex-ref= will then search through the first file encountered in any "\bibliography{...}" command found in your TeX buffer.
 - The customization option =czm-tex-ref-rearrange-bib-entries t= means that =czm-tex-ref= will rearrange your .bib file by moving selected entries to the top, so that it becomes easy to repeatedly cite "popular" references.  If you wish to disable this behavior, change =t= to =nil=.
-
+- If you work exclusively in file buffers and want to use reftex to select label captions, then add the following under =:custom=:
+  #+begin_src elisp
+   (czm-tex-ref-insert-label-function #'reftex-label)
+  #+end_src
+  Or customize this to whatever you'd ilke; the default option =czm-tex-ref-insert-label= inserts a time-stamped label in base 36, as in the GIF in [[Overview]].
 
 * Usage
 
