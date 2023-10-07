@@ -134,10 +134,14 @@ prefix."
 	  (> (length name) 1)
 	  (member (substring name 0 -1) valid-environments)))))
      (looking-at
-      (concat "^.*\\\\" (regexp-opt
-		         (append
-			  '("label{\\([^}]+\\)}" "item")
-			  (mapcar #'car reftex-section-levels)))
+      (concat "^.*\\\\"
+              "\\("
+              "label{\\([^}]+\\)}\\|"
+              (regexp-opt
+	       (append
+		'("item")
+		(mapcar #'car reftex-section-levels)))
+              "\\)"
 	      ".*$")))))
 
 (defun czm-tex-ref--label-candidates (curr-line)
