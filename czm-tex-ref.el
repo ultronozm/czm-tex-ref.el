@@ -121,6 +121,25 @@ prefix."
 ;;               (seq-filter (lambda (x) (eq (cadr x) 'LaTeX-env-label))
 ;;                           filtered-environment-list)))))
 
+(defun czm-tex-ref--line-for-label-p ()
+  (let ((valid-environments
+         czm-tex-ref-labelable-environments))
+    (or
+     (and
+      (looking-at "^.*\\\\begin{\\([^}]+\\)}\\(.*\\)$")
+      (let ((name (match-string 1)))
+        (or
+         (member name valid-environments)
+         (and
+	  (> (length name) 1)
+	  (member (substring name 0 -1) valid-environments)))))
+     (looking-at
+      (concat "^.*\\\\" (regexp-opt
+		         (append
+			  '("label{\\([^}]+\\)}" "item")
+			  (mapcar #'car reftex-section-levels)))
+	      ".*$")))))
+
 (defun czm-tex-ref--label-candidates (curr-line)
   "Return list of line candidates.
 Start from top if TOP non-nil.
@@ -129,26 +148,9 @@ CURR-LINE is the current line number."
   ;; (consult--fontify-all)  ; this was making everything much slower on large files
   (let* ((buffer (current-buffer))
 	 (line (line-number-at-pos (point-min) consult-line-numbers-widen))
-	 (valid-environments
-	  czm-tex-ref-labelable-environments)
 	 default-cand candidates)
     (consult--each-line beg end
-      (when
-	  (or
-	   (and
-	    (looking-at "^.*\\\\begin{\\([^}]+\\)}\\(.*\\)$")
-	    (let ((name (match-string 1)))
-	      (or
-	       (member name valid-environments)
-	       (and
-		(> (length name) 1)
-		(member (substring name 0 -1) valid-environments)))))
-	   (looking-at
-	    (concat "^.*\\\\" (regexp-opt
-			       (append
-				'("label{\\([^}]+\\)}" "item")
-				(mapcar #'car reftex-section-levels)))
-		    ".*$")))
+      (when (czm-tex-ref--line-for-label-p)
 	(push (consult--location-candidate
 	       (buffer-substring (line-beginning-position) (line-end-position))
 	       (cons buffer beg) line line)
