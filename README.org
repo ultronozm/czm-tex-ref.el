@@ -65,7 +65,7 @@ The latter workflow feels much quicker and more fluid to me.
 
 ** Citations
 
-[[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]] provides one basic function for inserting citations, [[https://www.gnu.org/software/auctex/manual/reftex/Creating-Citations.html#Creating-Citations][reftex-citation]].  The function =czm-tex-ref-cite= is analogous, but with two differences:
+[[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]] provides one basic function for inserting citations, [[https://www.gnu.org/software/auctex/manual/reftex/Creating-Citations.html#Creating-Citations][reftex-citation]].  The function =czm-tex-ref-bib= is analogous, but with two differences:
 1. It uses [[https://github.com/minad/consult][consult]] to select the citation to insert.
 2. It has been designed to work also in non-file buffers (e.g., [[https://orgmode.org/manual/Editing-Source-Code.html][indirect org-mode source blocks]]), and for this reason, is a bit less feature-complete than [[https://www.gnu.org/software/auctex/manual/reftex/Creating-Citations.html#Creating-Citations][reftex-citation]]:
    - It doesn't work with \bibitem entries.
