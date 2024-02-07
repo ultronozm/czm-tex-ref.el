@@ -43,7 +43,7 @@
   :prefix "czm-tex-ref-")
 
 (defcustom czm-tex-ref-labelable-environments
-  '("align" "gather" "flalign" "multline" "lemma" "exercise" "example" "proposition" "corollary" "remark" "definition" "theorem" "eqnarray" "equation" "conjecture" "question" "figure" "table" "problem")
+  '("align" "gather" "flalign" "multline" "lemma" "exercise" "example" "proposition" "corollary" "remark" "definition" "theorem" "eqnarray" "equation" "conjecture" "question" "figure" "table" "problem" "fact")
   "List of environments that can be labeled."
   :type '(repeat string)
   :group 'czm-tex-ref)
