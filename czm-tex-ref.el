@@ -62,10 +62,10 @@ functionality of `reftex', then set this variable to
   "Insert a unique label for the current LaTeX environment."
   (let*
       ((default-description
-	(or
-	 (czm-tex-ref--encode-number
-	  (string-to-number (format-time-string "%y%m%d%H%M%S%3N")))
-	 (funcall reftex-string-to-label-function (reftex-no-props (nth 2 (reftex-label-info " " nil nil t))))))
+	       (or
+	        (czm-tex-ref--encode-number
+	         (string-to-number (format-time-string "%y%m%d%H%M%S%3N")))
+	        (funcall reftex-string-to-label-function (reftex-no-props (nth 2 (reftex-label-info " " nil nil t))))))
        (description (read-from-minibuffer "Description:" default-description))
        (prefix (czm-tex-ref--label-prefix-from-env (LaTeX-current-environment)))
        (new-label (concat prefix description)))
@@ -131,18 +131,20 @@ prefix."
         (or
          (member name valid-environments)
          (and
-	  (> (length name) 1)
-	  (member (substring name 0 -1) valid-environments)))))
+	         (> (length name)
+             1)
+	         (member (substring name 0 -1)
+                  valid-environments)))))
      (looking-at
       (concat "^.*\\\\"
               "\\("
               "label{\\([^}]+\\)}\\|"
               (regexp-opt
-	       (append
-		'("item")
-		(mapcar #'car reftex-section-levels)))
+	              (append
+		              '("item")
+		              (mapcar #'car reftex-section-levels)))
               "\\)"
-	      ".*$")))))
+	             ".*$")))))
 
 (defun czm-tex-ref--label-candidates (curr-line)
   "Return list of line candidates.
@@ -151,16 +153,20 @@ CURR-LINE is the current line number."
   (consult--forbid-minibuffer)
   ;; (consult--fontify-all)  ; this was making everything much slower on large files
   (let* ((buffer (current-buffer))
-	 (line (line-number-at-pos (point-min) consult-line-numbers-widen))
-	 default-cand candidates)
+	        (line (line-number-at-pos (point-min)
+                                   consult-line-numbers-widen))
+	        default-cand candidates)
     (consult--each-line beg end
       (when (czm-tex-ref--line-for-label-p)
-	(push (consult--location-candidate
-	       (buffer-substring (line-beginning-position) (line-end-position))
-	       (cons buffer beg) line line)
-	      candidates)
-	(when (and (not default-cand) (>= line curr-line))
-	  (setq default-cand candidates)))
+	       (push (consult--location-candidate
+	              (buffer-substring (line-beginning-position)
+                                 (line-end-position))
+	              (cons buffer beg)
+               line line)
+	             candidates)
+	       (when (and (not default-cand)
+                   (>= line curr-line))
+	         (setq default-cand candidates)))
       (cl-incf line))
     (unless candidates
       (user-error "No lines"))
@@ -193,12 +199,13 @@ This function is a modification of `consult-line'."
   (interactive "P")
   (save-excursion
     ;; TODO: should `consult-line-numbers-widen' always be t?
-    (let* ((curr-line (line-number-at-pos (point) consult-line-numbers-widen))
-	   (candidates
-	    (save-restriction
-	      (when arg (widen))
-	      (consult--slow-operation "Collecting lines..."
-		(czm-tex-ref--label-candidates curr-line)))))
+    (let* ((curr-line (line-number-at-pos (point)
+                                          consult-line-numbers-widen))
+	          (candidates
+	           (save-restriction
+	             (when arg (widen))
+	             (consult--slow-operation "Collecting lines..."
+		              (czm-tex-ref--label-candidates curr-line)))))
       (consult--read
        candidates
        :prompt "Selection:"
@@ -207,46 +214,50 @@ This function is a modification of `consult-line'."
        :sort nil
        :require-match t
        ;; Always add last isearch string to future history
-       :add-history (list (thing-at-point 'symbol) isearch-string)
+       :add-history (list (thing-at-point 'symbol)
+                          isearch-string)
        :history '(:input consult--line-history)
        :lookup #'consult--line-match
        :default (car candidates)
        ;; Add isearch-string as initial input if starting from isearch
        :initial (and isearch-mode
-		     (prog1 isearch-string (isearch-done)))
+		                   (prog1 isearch-string (isearch-done)))
        :state (consult--location-state candidates)))
     (beginning-of-line)
     (let* ((end (line-end-position))
-	   (label
-	    (cond
-	     ;; We first check if there is an existing label on this line.
-	     ((re-search-forward "\\\\label{\\([^}]+\\)}" end t)
-	      (match-string 1))
-	     ;; We next check for \begin{...} environments.
-	     ((re-search-forward "\\\\begin{\\([^}]+\\)}" end t)
-	      (end-of-line)
-	      (let ((type (match-string 1)))
-		(when (and (> (length type) 1) (equal (substring type -1) "*"))
-		  (LaTeX-modify-environment (substring type 0 -1))))
-	      (funcall czm-tex-ref-insert-label-function))
-	     ;; We next check for \section{...} and varia.
-	     ((re-search-forward (concat "\\\\"
-					 (regexp-opt
-					  (mapcar #'car reftex-section-levels))
-					 "{\\([^}]+\\)}")
-				 end t)
-	      (funcall czm-tex-ref-insert-label-function))
-	     ;; We next check for \item's.
-	     ((re-search-forward "\\\\item" end t)
-	      (funcall czm-tex-ref-insert-label-function))
-	     ;; This shouldn't happen because of the way candidates
-	     ;; are constructed.
-	     (t
-	      (error "No label found"))))
-	   (reftype (if (member (LaTeX-current-environment)
-				'("equation" "align" "enumerate"))
-			"eqref"
-		      "ref")))
+	          (label
+	           (cond
+	            ;; We first check if there is an existing label on this line.
+	            ((re-search-forward "\\\\label{\\([^}]+\\)}" end t)
+	             (match-string 1))
+	            ;; We next check for \begin{...} environments.
+	            ((re-search-forward "\\\\begin{\\([^}]+\\)}" end t)
+	             (end-of-line)
+	             (let ((type (match-string 1)))
+		              (when (and (> (length type)
+                              1)
+                           (equal (substring type -1)
+                                  "*"))
+		                (LaTeX-modify-environment (substring type 0 -1))))
+	             (funcall czm-tex-ref-insert-label-function))
+	            ;; We next check for \section{...} and varia.
+	            ((re-search-forward (concat "\\\\"
+					                                    (regexp-opt
+					                                     (mapcar #'car reftex-section-levels))
+					                                    "{\\([^}]+\\)}")
+				                             end t)
+	             (funcall czm-tex-ref-insert-label-function))
+	            ;; We next check for \item's.
+	            ((re-search-forward "\\\\item" end t)
+	             (funcall czm-tex-ref-insert-label-function))
+	            ;; This shouldn't happen because of the way candidates
+	            ;; are constructed.
+	            (t
+	             (error "No label found"))))
+	          (reftype (if (member (LaTeX-current-environment)
+				                            '("equation" "align" "enumerate"))
+			                     "eqref"
+		                    "ref")))
       (kill-new (concat "\\" reftype "{" label "}")))))
 
 
@@ -277,9 +288,9 @@ top."
 (defun czm-tex-ref--bib-display-string ()
   "Return display string for current BibTeX entry."
   (let* ((entry (bibtex-parse-entry))
-	 (year (bibtex-text-in-field "year" entry))
-	 (author (bibtex-text-in-field "author" entry))
-	 (title (bibtex-text-in-field "title" entry)))
+	        (year (bibtex-text-in-field "year" entry))
+	        (author (bibtex-text-in-field "author" entry))
+	        (title (bibtex-text-in-field "title" entry)))
     (czm-tex-util-remove-braces-accents
      (format "%s, %s - %s" year author title))))
 
@@ -291,37 +302,39 @@ top."
     (let* ((bibfile
             (or
              czm-tex-ref-master-bib-file
-             (car (czm-tex-util-get-bib-files)) ; just look at the first
-                                           ; bib file
+             (car (czm-tex-util-get-bib-files))
+                                        ; just look at the first
+                                        ; bib file
              (user-error "No BibTeX files found")))
            (buffer
-	    (or
-             (and (file-exists-p bibfile) (find-file-noselect bibfile))
+	           (or
+             (and (file-exists-p bibfile)
+                  (find-file-noselect bibfile))
              (user-error "BibTeX file %s does not exist" bibfile)))
-	   (candidates))
+	          (candidates))
       (with-current-buffer buffer
-	(goto-char (point-min))
-	(while (re-search-forward bibtex-entry-head nil t)
-	  (save-excursion
-	    (bibtex-beginning-of-entry)
-	    (let* ((beg (point))
-		   (line (line-number-at-pos beg))
-		   (entry (bibtex-parse-entry))
-		   (display
-		    (or (cdr (assoc "display-string" entry))
-			(let*
-			    ((author (bibtex-text-in-field "author" entry))
-			     (title (bibtex-text-in-field "title" entry))
-			     (display-string
-			      (czm-tex-util-remove-braces-accents (format "%s - %s" author title))))
-			  (bibtex-make-field `("display-string" "for bibtex entry selection" ,display-string)
-					     t)
-			  display-string))))
-	      (push (consult--location-candidate
-		     display
-		     (cons buffer beg)
-		     line 0)
-		    candidates)))))
+	       (goto-char (point-min))
+	       (while (re-search-forward bibtex-entry-head nil t)
+	         (save-excursion
+	           (bibtex-beginning-of-entry)
+	           (let* ((beg (point))
+		                 (line (line-number-at-pos beg))
+		                 (entry (bibtex-parse-entry))
+		                 (display
+		                  (or (cdr (assoc "display-string" entry))
+			                     (let*
+			                         ((author (bibtex-text-in-field "author" entry))
+			                          (title (bibtex-text-in-field "title" entry))
+			                          (display-string
+			                           (czm-tex-util-remove-braces-accents (format "%s - %s" author title))))
+			                       (bibtex-make-field `("display-string" "for bibtex entry selection" ,display-string)
+					                                        t)
+			                       display-string))))
+	             (push (consult--location-candidate
+		                   display
+		                   (cons buffer beg)
+		                   line 0)
+		                  candidates)))))
       (nreverse candidates))))
 
 
@@ -336,35 +349,35 @@ The resulting \\cite{...} command is copied to the kill ring."
       (let* ((curr-line (line-number-at-pos (point)))
              (candidates (save-restriction (czm-tex-ref--bib-entry-candidates)))
              (_selected (consult--read
-			 candidates
-			 :prompt "BibTeX entry:"
-			 :annotate (consult--line-prefix curr-line)
-			 :category 'consult-location
-			 :sort nil
-			 :require-match t
-			 :history '(:input consult--line-history)
-			 :lookup #'consult--line-match
-			 :default (car candidates)
-			 :initial (and isearch-mode
+			                      candidates
+			                      :prompt "BibTeX entry:"
+			                      :annotate (consult--line-prefix curr-line)
+			                      :category 'consult-location
+			                      :sort nil
+			                      :require-match t
+			                      :history '(:input consult--line-history)
+			                      :lookup #'consult--line-match
+			                      :default (car candidates)
+			                      :initial (and isearch-mode
                                        (prog1 isearch-string (isearch-done)))
-			 :state (consult--location-state candidates)))
-	     (selected-entry
-	      (progn
-		(bibtex-beginning-of-entry)
-		(bibtex-parse-entry))))
-	(setq key (cdr (assoc "=key=" selected-entry)))
-	(when t
-	  (let* ((beg (progn
-			(bibtex-beginning-of-entry)
-			(point)))
-		 (end (progn
-			(bibtex-end-of-entry)
-			(point)))
-		 (contents (buffer-substring-no-properties beg end)))
+			                      :state (consult--location-state candidates)))
+	            (selected-entry
+	             (progn
+		              (bibtex-beginning-of-entry)
+		              (bibtex-parse-entry))))
+	       (setq key (cdr (assoc "=key=" selected-entry)))
+	       (when t
+	         (let* ((beg (progn
+			                     (bibtex-beginning-of-entry)
+			                     (point)))
+		               (end (progn
+			                     (bibtex-end-of-entry)
+			                     (point)))
+		               (contents (buffer-substring-no-properties beg end)))
             (when czm-tex-ref-rearrange-bib-entries
-	      (delete-region beg end)
-	      (goto-char (point-min))
-	      (insert contents "\n"))))
+	             (delete-region beg end)
+	             (goto-char (point-min))
+	             (insert contents "\n"))))
         (bury-buffer)))
     (insert "\\cite")
     (save-excursion
