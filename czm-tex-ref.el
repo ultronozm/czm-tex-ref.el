@@ -146,6 +146,20 @@ prefix."
               "\\)"
 	             ".*$")))))
 
+(defface czm-tex-ref-label-face '((t :inherit shadow))
+  "Face for LaTeX label numbers in consult previews."
+  :group 'consult)
+
+(defun czm-tex-ref--add-label-number (line-contents)
+  "Concatenate label number to LINE-CONTENTS if it exists."
+  (concat
+   line-contents
+   (when (string-match "\\label{\\([^}]+\\)}" line-contents)
+     (when-let ((label (match-string 1 line-contents))
+                (label-number (czm-tex-util-get-label-number label)))
+       (propertize (format " (%s)" label-number)
+                   'face 'czm-tex-ref-label-face)))))
+
 (defun czm-tex-ref--label-candidates (curr-line)
   "Return list of line candidates.
 Start from top if TOP non-nil.
@@ -159,8 +173,9 @@ CURR-LINE is the current line number."
     (consult--each-line beg end
       (when (czm-tex-ref--line-for-label-p)
 	       (push (consult--location-candidate
-	              (buffer-substring (line-beginning-position)
-                                 (line-end-position))
+               (czm-tex-ref--add-label-number
+                (buffer-substring (line-beginning-position)
+                                  (line-end-position)))
 	              (cons buffer beg)
                line line)
 	             candidates)
@@ -176,6 +191,16 @@ CURR-LINE is the current line number."
        (let ((before (cdr default-cand)))
          (setcdr default-cand nil)
          (nconc before candidates))))))
+
+(defun czm-tex-ref--line-match (selected candidates input &rest _)
+  "Variant of `consult--line-match' that puts the point at bol.
+This is used because the inclusion of label numbers in the
+consult preview can otherwise cause the point to be placed on the
+next line."
+  (if (not (string-blank-p input))
+      (consult--lookup-location selected candidates)
+    (and (string-match-p (regexp-quote input) selected)
+         (consult--lookup-location selected candidates))))
 
 ;;;###autoload
 (defun czm-tex-ref-label (&optional arg)
@@ -209,7 +234,8 @@ This function is a modification of `consult-line'."
       (consult--read
        candidates
        :prompt "Selection:"
-       :annotate (consult--line-prefix curr-line)
+       ;; :annotate #'czm-tex-label-annotate
+       ;; :annotate (consult--line-prefix curr-line)
        :category 'consult-location
        :sort nil
        :require-match t
@@ -217,7 +243,9 @@ This function is a modification of `consult-line'."
        :add-history (list (thing-at-point 'symbol)
                           isearch-string)
        :history '(:input consult--line-history)
-       :lookup #'consult--line-match
+       :lookup #'czm-tex-ref--line-match
+       ;; :lookup #'czm-tex-ref--line-match
+       ;; :lookup #'consult--line-match
        :default (car candidates)
        ;; Add isearch-string as initial input if starting from isearch
        :initial (and isearch-mode
