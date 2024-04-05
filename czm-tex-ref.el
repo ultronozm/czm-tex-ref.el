@@ -226,11 +226,11 @@ This function is a modification of `consult-line'."
     ;; TODO: should `consult-line-numbers-widen' always be t?
     (let* ((curr-line (line-number-at-pos (point)
                                           consult-line-numbers-widen))
-	          (candidates
-	           (save-restriction
-	             (when arg (widen))
-	             (consult--slow-operation "Collecting lines..."
-		              (czm-tex-ref--label-candidates curr-line)))))
+           (candidates
+            (save-restriction
+              (when arg (widen))
+              (consult--slow-operation "Collecting lines..."
+                (czm-tex-ref--label-candidates curr-line)))))
       (consult--read
        candidates
        :prompt "Selection:"
@@ -249,43 +249,45 @@ This function is a modification of `consult-line'."
        :default (car candidates)
        ;; Add isearch-string as initial input if starting from isearch
        :initial (and isearch-mode
-		                   (prog1 isearch-string (isearch-done)))
+                     (prog1 isearch-string (isearch-done)))
        :state (consult--location-state candidates)))
     (beginning-of-line)
     (let* ((end (line-end-position))
-	          (label
-	           (cond
-	            ;; We first check if there is an existing label on this line.
-	            ((re-search-forward "\\\\label{\\([^}]+\\)}" end t)
-	             (match-string 1))
-	            ;; We next check for \begin{...} environments.
-	            ((re-search-forward "\\\\begin{\\([^}]+\\)}" end t)
-	             (end-of-line)
-	             (let ((type (match-string 1)))
-		              (when (and (> (length type)
+           (label
+            (cond
+             ;; We first check if there is an existing label on this line.
+             ((re-search-forward "\\\\label{\\([^}]+\\)}" end t)
+              (match-string 1))
+             ;; We next check for \begin{...} environments.
+             ((re-search-forward "\\\\begin{\\([^}]+\\)}" end t)
+              (end-of-line)
+              (let ((type (match-string 1)))
+                (when (and (> (length type)
                               1)
                            (equal (substring type -1)
                                   "*"))
-		                (LaTeX-modify-environment (substring type 0 -1))))
-	             (funcall czm-tex-ref-insert-label-function))
-	            ;; We next check for \section{...} and varia.
-	            ((re-search-forward (concat "\\\\"
-					                                    (regexp-opt
-					                                     (mapcar #'car reftex-section-levels))
-					                                    "{\\([^}]+\\)}")
-				                             end t)
-	             (funcall czm-tex-ref-insert-label-function))
-	            ;; We next check for \item's.
-	            ((re-search-forward "\\\\item" end t)
-	             (funcall czm-tex-ref-insert-label-function))
-	            ;; This shouldn't happen because of the way candidates
-	            ;; are constructed.
-	            (t
-	             (error "No label found"))))
-	          (reftype (if (member (LaTeX-current-environment)
-				                            '("equation" "align" "enumerate"))
-			                     "eqref"
-		                    "ref")))
+                  (LaTeX-modify-environment (substring type 0 -1))))
+              (funcall czm-tex-ref-insert-label-function))
+             ;; We next check for \section{...} and varia.
+             ((re-search-forward (concat "\\\\"
+                                         (regexp-opt
+                                          (mapcar #'car reftex-section-levels))
+                                         "{\\([^}]+\\)}")
+                                 end t)
+              (goto-char (match-beginning 0))
+              (forward-list)
+              (funcall czm-tex-ref-insert-label-function))
+             ;; We next check for \item's.
+             ((re-search-forward "\\\\item" end t)
+              (funcall czm-tex-ref-insert-label-function))
+             ;; This shouldn't happen because of the way candidates
+             ;; are constructed.
+             (t
+              (error "No label found"))))
+           (reftype (if (member (LaTeX-current-environment)
+                                '("equation" "align" "enumerate"))
+                        "eqref"
+                      "ref")))
       (kill-new (concat "\\" reftype "{" label "}")))))
 
 
