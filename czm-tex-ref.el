@@ -322,8 +322,7 @@ top."
 	        (author (bibtex-text-in-field "author" entry))
 	        (title (bibtex-text-in-field "title" entry)))
     (czm-tex-util-remove-braces-accents
-     (format "%s, %s - %s" year author title))))
-
+     (format "(%s) %s - %s" year author title))))
 
 (defun czm-tex-ref--bib-entry-candidates ()
   "Return list of BibTeX entry candidates."
