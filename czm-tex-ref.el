@@ -352,10 +352,7 @@ top."
 		                 (display
 		                  (or (cdr (assoc "display-string" entry))
 			                     (let*
-			                         ((author (bibtex-text-in-field "author" entry))
-			                          (title (bibtex-text-in-field "title" entry))
-			                          (display-string
-			                           (czm-tex-util-remove-braces-accents (format "%s - %s" author title))))
+			                         ((display-string (czm-tex-ref--bib-display-string)))
 			                       (bibtex-make-field `("display-string" "for bibtex entry selection" ,display-string)
 					                                        t)
 			                       display-string))))
