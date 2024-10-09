@@ -126,29 +126,27 @@ prefix."
 ;;                           filtered-environment-list)))))
 
 (defun czm-tex-ref--line-for-label-p ()
-  (let ((valid-environments
-         czm-tex-ref-labelable-environments))
+  "Return whether the line is suitable for labeling.
+This function should be called at the beginning of a line."
+  (let ((valid-environments czm-tex-ref-labelable-environments)
+        (label-re
+         (concat "\\(?:"
+                 (mapconcat #'identity reftex-label-regexps "\\|") "\\)")))
     (or
-     (and
-      (looking-at "^.*\\\\begin{\\([^}]+\\)}\\(.*\\)$")
-      (let ((name (match-string 1)))
-        (or
-         (member name valid-environments)
-         (and
-	         (> (length name)
-             1)
-	         (member (substring name 0 -1)
-                  valid-environments)))))
+     (and (looking-at "^.*\\\\begin{\\([^}]+\\)}\\(.*\\)$")
+          (let ((name (match-string 1)))
+            (or (member name valid-environments)
+                (and (> (length name) 1)
+                     (member (substring name 0 -1) valid-environments)))))
      (looking-at
-      (concat "^.*\\\\"
-              "\\("
-              "label{\\([^}]+\\)}\\|"
-              (regexp-opt
-	              (append
-		              '("item")
-		              (mapcar #'car reftex-section-levels)))
+      (concat "^.*\\(?:"
+              label-re
+              "\\|"
+              "\\\\\\("
+              (regexp-opt (append '("item")
+                                  (mapcar #'car reftex-section-levels)))
               "\\)"
-	             ".*$")))))
+              "\\)")))))
 
 (defface czm-tex-ref-label-face '((t :inherit shadow))
   "Face for LaTeX label numbers in consult previews."
