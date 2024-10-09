@@ -5,7 +5,7 @@
 ;; Author: Paul D. Nelson <nelson.paul.david@gmail.com>
 ;; Version: 0.0
 ;; URL: https://github.com/ultronozm/czm-tex-ref.el
-;; Package-Requires: ((emacs "29.1") (consult "0.35") (czm-tex-util "0.0"))
+;; Package-Requires: ((emacs "29.1") (consult "0.35") (auctex-label-numbers "0.2") (czm-tex-util "0.0"))
 ;; Keywords: tex
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -35,6 +35,7 @@
 (require 'bibtex)
 (require 'consult)
 (require 'czm-tex-util)
+(require 'auctex-label-numbers)
 
 ;;;; References
 
@@ -158,7 +159,7 @@ This function should be called at the beginning of a line."
    line-contents
    (when (string-match "\\label{\\([^}]+\\)}" line-contents)
      (when-let ((label (match-string 1 line-contents))
-                (label-number (czm-tex-util-get-label-number label)))
+                (label-number (auctex-label-numbers-label-to-number label)))
        (propertize (format " (%s)" label-number)
                    'face 'czm-tex-ref-label-face)))))
 
