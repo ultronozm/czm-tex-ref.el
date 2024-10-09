@@ -196,9 +196,8 @@ CURR-LINE is the current line number."
 
 (defun czm-tex-ref--line-match (selected candidates input &rest _)
   "Variant of `consult--line-match' that puts the point at bol.
-This is used because the inclusion of label numbers in the
-consult preview can otherwise cause the point to be placed on the
-next line."
+This is used because the inclusion of label numbers in the consult
+preview can otherwise cause the point to be placed on the next line."
   (if (not (string-blank-p input))
       (consult--lookup-location selected candidates)
     (and (string-match-p (regexp-quote input) selected)
