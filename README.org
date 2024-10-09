@@ -43,6 +43,22 @@ Modify suitably:
   #+end_src
   Or customize this to whatever you'd like; the default option =czm-tex-ref-insert-label= inserts a time-stamped label in base 36, as in the GIF above.
 
+To get the same behavior as depicted in the GIF above, you'll also want to install and set up vertico, and possibly orderless.  This affects how Emacs works in general (in a way that you may or may not like).  My config is roughly as follows:
+
+#+begin_src elisp
+(use-package vertico
+  :ensure t
+  :demand
+  :config
+  (vertico-mode))
+
+(use-package orderless
+  :ensure t
+  :demand
+  :custom
+  (completion-styles '(orderless basic)))
+#+end_src
+
 * Usage
 
 ** References and labels
