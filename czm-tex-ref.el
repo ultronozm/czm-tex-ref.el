@@ -29,10 +29,14 @@
 
 ;;; Code:
 
+;;;; Dependencies
+
 (require 'reftex)
 (require 'bibtex)
 (require 'consult)
 (require 'czm-tex-util)
+
+;;;; References
 
 ;; The following customizable variable specifies which function to be
 ;; used for inserting labels.  The default is to use reftex.
@@ -290,11 +294,7 @@ This function is a modification of `consult-line'."
                       "ref")))
       (kill-new (concat "\\" reftype "{" label "}")))))
 
-
-
-
-;; bibtex stuff goes below here
-
+;;;; Citations
 
 (defcustom czm-tex-ref-master-bib-file
   nil
