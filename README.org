@@ -89,5 +89,16 @@ The latter workflow feels much quicker and more fluid to me.
 
 This isn't much of a problem for me, since I keep all my references in one .bib file.
 
+* Tips and Tricks
+
+** Candidate ordering in =czm-tex-ref-label=
+When using =czm-tex-ref-label=, candidates are presented in a specific order: first the candidates from your current cursor position through the end of the document, followed by candidates from the beginning of the document up to your cursor position.
+
+This means that:
+- If you're in the middle of the document, candidates after your position appear first in the list, followed by candidates from the beginning up to your current position.
+- When the selection menu appears, using =M->= (=end-of-buffer=) jumps to the end of the candidate list, which shows candidates from earlier in the document (those that appear just before your current position).
+
+If you prefer to see candidates in document order (from beginning to end), the simplest approach is to place your cursor at the beginning of the document before invoking =czm-tex-ref-label=.
+
 * Related packages
 There is a work in progress called [[https://github.com/karthink/consult-reftex][consult-reftex]] that provides a "two method" interface, closer to that of [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]], for labels and references, also using [[https://github.com/minad/consult][consult]].
