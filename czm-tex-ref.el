@@ -322,45 +322,45 @@ top."
     (czm-tex-util-remove-braces-accents
      (format "(%s) %s - %s" year author title))))
 
+(defun czm-tex-ref--bib-candidates-from-buffer ()
+  "Return list of BibTeX entry candidates from current buffer.
+Assumes current buffer contains BibTeX entries."
+  (save-excursion
+    (let (candidates)
+      (goto-char (point-min))
+      (while (re-search-forward bibtex-entry-head nil t)
+        (save-excursion
+          (bibtex-beginning-of-entry)
+          (let* ((beg (point))
+                 (line (line-number-at-pos beg))
+                 (entry (bibtex-parse-entry))
+                 (display
+                  (or (cdr (assoc "display-string" entry))
+                      (let* ((display-string (czm-tex-ref--bib-display-string)))
+                        (bibtex-make-field `("display-string" "for bibtex entry selection" ,display-string) t)
+                        display-string))))
+            (push (consult--location-candidate
+                   display
+                   (cons (current-buffer) beg)
+                   line 0)
+                  candidates))))
+      (nreverse candidates))))
+
 (defun czm-tex-ref--bib-entry-candidates ()
   "Return list of BibTeX entry candidates."
   (consult--forbid-minibuffer)
-  (save-excursion
-    (let* ((bibfile
-            (or
-             czm-tex-ref-master-bib-file
-             (car (czm-tex-util-get-bib-files))
-                                        ; just look at the first
-                                        ; bib file
-             (user-error "No BibTeX files found")))
-           (buffer
-	           (or
-             (and (file-exists-p bibfile)
-                  (find-file-noselect bibfile))
-             (user-error "BibTeX file %s does not exist" bibfile)))
-	          (candidates))
-      (with-current-buffer buffer
-	       (goto-char (point-min))
-	       (while (re-search-forward bibtex-entry-head nil t)
-	         (save-excursion
-	           (bibtex-beginning-of-entry)
-	           (let* ((beg (point))
-		                 (line (line-number-at-pos beg))
-		                 (entry (bibtex-parse-entry))
-		                 (display
-		                  (or (cdr (assoc "display-string" entry))
-			                     (let*
-			                         ((display-string (czm-tex-ref--bib-display-string)))
-			                       (bibtex-make-field `("display-string" "for bibtex entry selection" ,display-string)
-					                                        t)
-			                       display-string))))
-	             (push (consult--location-candidate
-		                   display
-		                   (cons buffer beg)
-		                   line 0)
-		                  candidates)))))
-      (nreverse candidates))))
-
+  (let* ((bibfile
+          (or
+           czm-tex-ref-master-bib-file
+           (car (czm-tex-util-get-bib-files)) ; use the first bib file
+           (user-error "No BibTeX files found")))
+         (buffer
+          (or
+           (and (file-exists-p bibfile)
+                (find-file-noselect bibfile))
+           (user-error "BibTeX file %s does not exist" bibfile))))
+    (with-current-buffer buffer
+      (czm-tex-ref--bib-candidates-from-buffer))))
 
 ;;;###autoload
 (defun czm-tex-ref-bib ()
