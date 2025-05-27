@@ -297,9 +297,8 @@ This function is a modification of `consult-line'."
 (defcustom czm-tex-ref-master-bib-file
   nil
   "Master BibTeX file.
-If non-nil, this file is used to generate the list of BibTeX
-entries.  Otherwise, the list is generated from the BibTeX files
-referenced by the current buffer."
+This file, if non-nil, is used as a backup in case no BibTeX files are
+referenced in the current buffer."
   :type 'file
   :group 'czm-tex-ref)
 
@@ -351,8 +350,8 @@ Assumes current buffer contains BibTeX entries."
   (consult--forbid-minibuffer)
   (let* ((bibfile
           (or
-           czm-tex-ref-master-bib-file
            (car (czm-tex-util-get-bib-files)) ; use the first bib file
+           czm-tex-ref-master-bib-file
            (user-error "No BibTeX files found")))
          (buffer
           (or
