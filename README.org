@@ -100,5 +100,20 @@ This means that:
 
 If you prefer to see candidates in document order (from beginning to end), the simplest approach is to place your cursor at the beginning of the document before invoking =czm-tex-ref-label=.
 
+** Jumping to labels
+By default, =czm-tex-ref-label= copies a reference to the selected label to the kill ring.  Sometimes, you might wish instead to jump to that label's definition.  You can achieve this using the [[https://github.com/oantolin/embark][embark]] and [[https://elpa.gnu.org/packages/embark-consult.html][embark-consult]] packages, which allow you to perform context-sensitive actions on consult candidates.
+
+First, install both packages and bind a key to =embark-act=, e.g.:
+#+begin_src elisp
+(use-package embark
+  :bind
+  (("C-." . embark-act)
+   ("M-." . embark-dwim)))
+
+(use-package embark-consult)
+#+end_src
+Then, after invoking =czm-tex-ref-label= and navigating to the desired location in the candidates list, press ~C-.~ to invoke Embark, and then press ~RET~ to jump to the selected location (via the default Embark action, ~embark-consult-goto-location~).
+
+
 * Related packages
 There is a work in progress called [[https://github.com/karthink/consult-reftex][consult-reftex]] that provides a "two method" interface, closer to that of [[https://www.gnu.org/software/auctex/manual/reftex/index.html][reftex]], for labels and references, also using [[https://github.com/minad/consult][consult]].
