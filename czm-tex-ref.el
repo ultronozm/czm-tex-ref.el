@@ -158,8 +158,8 @@ This function should be called at the beginning of a line."
   (concat
    line-contents
    (when (string-match "\\label{\\([^}]+\\)}" line-contents)
-     (when-let ((label (match-string 1 line-contents))
-                (label-number (auctex-label-numbers-label-to-number label)))
+     (when-let* ((label (match-string 1 line-contents))
+                 (label-number (auctex-label-numbers-label-to-number label)))
        (propertize (format " (%s)" label-number)
                    'face 'czm-tex-ref-label-face)))))
 
