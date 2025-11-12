@@ -274,7 +274,7 @@ This function is a modification of `consult-line'."
              ((re-search-forward (concat "\\\\"
                                          (regexp-opt
                                           (mapcar #'car reftex-section-levels))
-                                         "{\\([^}]+\\)}")
+                                         "{\\([^}]*\\)}")
                                  end t)
               (goto-char (match-beginning 0))
               (forward-list)
