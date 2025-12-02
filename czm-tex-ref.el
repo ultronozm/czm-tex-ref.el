@@ -204,6 +204,41 @@ preview can otherwise cause the point to be placed on the next line."
     (and (string-match-p (regexp-quote input) selected)
          (consult--lookup-location selected candidates))))
 
+(defun czm-tex-ref--line-annotate (&optional curr-line)
+  "Return an annotation function for line-oriented candidates.
+Prefers Consult's internal helpers when available, and otherwise falls
+back to a small compatibility function which just displays line numbers.
+CURR-LINE is forwarded to the underlying helper."
+  (cond
+   ((fboundp 'consult--line-fontify)
+    (consult--line-fontify curr-line))
+   ((fboundp 'consult--line-prefix)
+    (consult--line-prefix curr-line))
+   (t
+    (czm-tex-ref--line-annotate-basic curr-line))))
+
+(defun czm-tex-ref--line-annotate-basic (&optional curr-line)
+  "Simple fallback annotation function for line candidates.
+Displays zero-padded line numbers without relying on Consult internals."
+  (let* ((curr (or curr-line -1))
+         (width (max 1 (length (number-to-string
+                                (line-number-at-pos (point-max)
+                                                     consult-line-numbers-widen)))))
+         (fmt (format "%%%dd " width))
+         (before-face (cond
+                       ((facep 'consult-line-number-wrapped) 'consult-line-number-wrapped)
+                       ((facep 'consult-line-number-prefix) 'consult-line-number-prefix)
+                       (t 'shadow)))
+         (after-face (or (and (facep 'consult-line-number-prefix)
+                               'consult-line-number-prefix)
+                          (and (facep 'consult-line-number) 'consult-line-number)
+                          'shadow)))
+    (lambda (cand)
+      (let* ((location (get-text-property 0 'consult-location cand))
+             (line (if (consp location) (cdr location) 0))
+             (face (if (< line curr) before-face after-face)))
+        (list cand (propertize (format fmt line) 'face face) "")))))
+
 ;;;###autoload
 (defun czm-tex-ref-label (&optional arg)
   "Use consult to insert and copy a LaTeX label.
@@ -237,7 +272,7 @@ This function is a modification of `consult-line'."
        candidates
        :prompt "Selection:"
        ;; :annotate #'czm-tex-label-annotate
-       ;; :annotate (consult--line-prefix curr-line)
+       ;; :annotate (czm-tex-ref--line-annotate curr-line)
        :category 'consult-location
        :sort nil
        :require-match t
@@ -374,7 +409,7 @@ The resulting \\cite{...} command is copied to the kill ring."
              (_selected (consult--read
 			                      candidates
 			                      :prompt "BibTeX entry:"
-			                      :annotate (consult--line-prefix curr-line)
+			                      :annotate (czm-tex-ref--line-annotate curr-line)
 			                      :category 'consult-location
 			                      :sort nil
 			                      :require-match t
