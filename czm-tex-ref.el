@@ -33,6 +33,8 @@
 
 (require 'reftex)
 (require 'bibtex)
+(require 'seq)
+(require 'subr-x)
 (require 'consult)
 (require 'czm-tex-util)
 (require 'auctex-label-numbers)
@@ -148,6 +150,171 @@ This function should be called at the beginning of a line."
                                   (mapcar #'car reftex-section-levels)))
               "\\)"
               "\\)")))))
+
+(defcustom czm-tex-ref-manage-externaldocument t
+  "Whether yanking a copied reference manages \\externaldocument.
+When non-nil, yanking a reference copied by `czm-tex-ref-label' into a
+LaTeX buffer visiting a different file inserts a corresponding
+\\externaldocument declaration into the preamble, unless one is already
+present."
+  :type 'boolean
+  :group 'czm-tex-ref)
+
+(defconst czm-tex-ref--externaldocument-regexp
+  (concat "^[ \t]*\\\\external\\(?:cite\\)?document"
+          "\\(?:[ \t]*\\[\\([^]\n]*\\)\\]\\)?"
+          "\\(?:[ \t]*\\[[^]\n]*\\]\\)?"
+          "[ \t]*{\\([^}\n]+\\)}")
+  "Regexp for \\externaldocument declarations.
+The optional prefix and the file name are captured in groups one and
+two, respectively.")
+
+(defconst czm-tex-ref--usepackage-regexp
+  (concat "^[ \t]*\\\\usepackage"
+          "\\(?:[ \t]*\\[[^]\n]*\\]\\)?"
+          "[ \t]*{\\([^}\n]+\\)}")
+  "Regexp for \\usepackage declarations, capturing the package list.")
+
+(defun czm-tex-ref--externaldocument-prefix (slug &optional limit)
+  "Return the prefix of an existing declaration for SLUG.
+The prefix is the empty string if the declaration has none.  Return nil
+if no declaration occurs before LIMIT, or the end of the buffer."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (catch 'prefix
+        (while (re-search-forward czm-tex-ref--externaldocument-regexp limit t)
+          (when (equal (match-string-no-properties 2) slug)
+            (throw 'prefix (or (match-string-no-properties 1) ""))))
+        nil))))
+
+(defun czm-tex-ref--preamble-end ()
+  "Return the start of the current document's \\begin{document}."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (when (re-search-forward "^[ \t]*\\\\begin[ \t]*{document}" nil t)
+        (match-beginning 0)))))
+
+(defun czm-tex-ref--xr-usepackage-line-end (limit)
+  "Return the end of the last xr or xr-hyper usepackage line before LIMIT."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let (last)
+        (while (re-search-forward czm-tex-ref--usepackage-regexp limit t)
+          (when (seq-some
+                 (lambda (package)
+                   (member package '("xr" "xr-hyper")))
+                 (split-string (match-string-no-properties 1)
+                               "[ \t]*,[ \t]*" t))
+            (setq last (line-end-position))))
+        last))))
+
+(defun czm-tex-ref--same-file-p (file1 file2)
+  "Return non-nil if FILE1 and FILE2 name the same file."
+  (or (equal (expand-file-name file1) (expand-file-name file2))
+      (file-equal-p file1 file2)))
+
+(defun czm-tex-ref--ensure-externaldocument (source)
+  "Declare SOURCE via \\externaldocument in the current document.
+SOURCE is the tex file from which a reference was copied.  Do nothing if
+SOURCE is the file visited by the current buffer, or if a declaration is
+already present.  Insert the declaration after the last existing one, or
+failing that, after the \\usepackage{xr-hyper} (or xr) line, or failing
+that, just before \\begin{document}, in which case \\usepackage{xr-hyper}
+is added too.  Return a plist containing the declaration's prefix and,
+when text was inserted, markers bounding that text."
+  (let* ((current (buffer-file-name (buffer-base-buffer)))
+         (slug (file-name-sans-extension
+                (if current
+                    (file-relative-name source (file-name-directory current))
+                  (file-name-nondirectory source))))
+         (preamble-end (czm-tex-ref--preamble-end)))
+    (cond
+     ((and current (czm-tex-ref--same-file-p source current))
+      nil)
+     ((not preamble-end)
+      (message "No preamble found; \\externaldocument{%s} not added" slug)
+      nil)
+     ((when-let* ((prefix
+                   (czm-tex-ref--externaldocument-prefix slug preamble-end)))
+        (list :prefix prefix)))
+     (t
+      (save-excursion
+        (save-restriction
+          (widen)
+          (goto-char (point-min))
+          (let (last package-line)
+            (while (re-search-forward czm-tex-ref--externaldocument-regexp
+                                      preamble-end t)
+              (setq last (line-end-position)))
+            (setq package-line
+                  (czm-tex-ref--xr-usepackage-line-end preamble-end))
+            (goto-char (or last package-line preamble-end))
+            (let ((beg (point)))
+              (if (< (point) preamble-end)
+                  (insert (format "\n\\externaldocument{%s}" slug))
+                (insert (format
+                         "\\usepackage{xr-hyper}\n\\externaldocument{%s}\n\n"
+                         slug)))
+              (if (or last package-line)
+                  (message "Added \\externaldocument{%s}" slug)
+                (message
+                 "Added \\usepackage{xr-hyper} and \\externaldocument{%s}"
+                 slug))
+              (list :prefix ""
+                    :inserted (cons (copy-marker beg)
+                                    (copy-marker (point) t)))))))))))
+
+(defun czm-tex-ref--prefix-ref (ref prefix)
+  "Add PREFIX to the label in REF."
+  (if (and prefix
+           (not (string-empty-p prefix))
+           (string-match "{\\([^}]+\\)}" ref))
+      (concat (substring ref 0 (match-beginning 1))
+              prefix
+              (substring ref (match-beginning 1)))
+    ref))
+
+(defun czm-tex-ref--yank-handler (string)
+  "Insert STRING, managing \\externaldocument declarations.
+If STRING records a source file (see `czm-tex-ref--propertize-ref') and
+was yanked into a LaTeX buffer visiting a different file, ensure that
+the current document declares that source via \\externaldocument."
+  (let* ((source (get-text-property 0 'czm-tex-ref-source string))
+         (declaration
+          (when (and source
+                     czm-tex-ref-manage-externaldocument
+                     (derived-mode-p 'latex-mode 'LaTeX-mode))
+            (czm-tex-ref--ensure-externaldocument source)))
+         (inserted (plist-get declaration :inserted)))
+    (insert (czm-tex-ref--prefix-ref
+             (substring-no-properties string)
+             (plist-get declaration :prefix)))
+    (when inserted
+      (setq yank-undo-function
+            (lambda (beg end)
+              (delete-region beg end)
+              (when (and (marker-position (car inserted))
+                         (marker-position (cdr inserted)))
+                (delete-region (car inserted) (cdr inserted)))
+              (set-marker (car inserted) nil)
+              (set-marker (cdr inserted) nil))))))
+
+(defun czm-tex-ref--propertize-ref (ref)
+  "Return REF, recording the current buffer's file as its source.
+The returned string carries a `yank-handler' property so that yanking it
+into another document can insert the corresponding \\externaldocument
+declaration; see `czm-tex-ref-manage-externaldocument'."
+  (if-let* ((file (buffer-file-name (buffer-base-buffer))))
+      (propertize ref
+                  'czm-tex-ref-source file
+                  'yank-handler (list #'czm-tex-ref--yank-handler))
+    ref))
 
 (defface czm-tex-ref-label-face '((t :inherit shadow))
   "Face for LaTeX label numbers in consult previews."
@@ -325,7 +492,8 @@ This function is a modification of `consult-line'."
                                 '("equation" "align" "enumerate"))
                         "eqref"
                       "ref")))
-      (kill-new (concat "\\" reftype "{" label "}")))))
+      (kill-new (czm-tex-ref--propertize-ref
+                 (concat "\\" reftype "{" label "}"))))))
 
 ;;;; Citations
 
